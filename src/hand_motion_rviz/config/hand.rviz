@@ -1,0 +1,21 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Alpha: 1
+      Class: rviz_default_plugins/RobotModel
+      Collision Enabled: false
+      Description File: ""
+      Description Parameter: robot_description
+      Description Source: Parameter
+      Enabled: true
+      Name: Robot Hand
+      TF Prefix: ""
+      Update Interval: 0
+      Visual Enabled: true
+  Global Options:
+    Background Color: 48; 48; 48
+    Fixed Frame: palm
+  Name: root

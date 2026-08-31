@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="camera_hand">
+  <material name="blue"><color rgba="0.15 0.55 0.95 1"/></material>
+  <material name="dark"><color rgba="0.08 0.12 0.2 1"/></material>
+  <link name="palm">
+    <visual><geometry><box size="0.13 0.10 0.035"/></geometry><material name="dark"/></visual>
+  </link>
+  <xacro:macro name="finger" params="name x y length">
+    <joint name="${name}_joint" type="revolute">
+      <parent link="palm"/><child link="${name}_finger"/>
+      <origin xyz="${x} ${y} 0" rpy="0 0 0"/><axis xyz="0 1 0"/>
+      <limit lower="0" upper="1.45" effort="1" velocity="2"/>
+    </joint>
+    <link name="${name}_finger">
+      <visual>
+        <origin xyz="${length / 2} 0 0"/>
+        <geometry><box size="${length} 0.018 0.022"/></geometry>
+        <material name="blue"/>
+      </visual>
+    </link>
+  </xacro:macro>
+  <xacro:finger name="thumb"  x="0.015" y="-0.052" length="0.065"/>
+  <xacro:finger name="index"  x="0.060" y="-0.030" length="0.105"/>
+  <xacro:finger name="middle" x="0.065" y="-0.005" length="0.120"/>
+  <xacro:finger name="ring"   x="0.060" y="0.020" length="0.110"/>
+  <xacro:finger name="little" x="0.050" y="0.043" length="0.085"/>
+</robot>
