@@ -11,7 +11,14 @@ from sensor_msgs.msg import JointState
 
 
 FINGERS = ('thumb', 'index', 'middle', 'ring', 'little')
-JOINTS = [f'{finger}_joint' for finger in FINGERS]
+FINGER_JOINTS = (
+    (('thumb_cmc_joint', 0.75), ('thumb_mcp_joint', 1.05), ('thumb_ip_joint', 1.10)),
+    (('index_mcp_joint', 1.15), ('index_pip_joint', 1.35), ('index_dip_joint', 0.95)),
+    (('middle_mcp_joint', 1.15), ('middle_pip_joint', 1.35), ('middle_dip_joint', 0.95)),
+    (('ring_mcp_joint', 1.15), ('ring_pip_joint', 1.35), ('ring_dip_joint', 0.95)),
+    (('little_mcp_joint', 1.15), ('little_pip_joint', 1.35), ('little_dip_joint', 0.95)),
+)
+JOINTS = [joint for finger_joints in FINGER_JOINTS for joint, _ in finger_joints]
 
 
 class HandBridge(Node):
@@ -55,8 +62,10 @@ class HandBridge(Node):
         message = JointState()
         message.header.stamp = self.get_clock().now().to_msg()
         message.name = JOINTS
-        # 0 is open; 1.45 rad is a comfortably closed finger.
-        message.position = [curl * 1.45 for curl in self.curls]
+        # A single curl value drives the three anatomical joints of each finger.
+        message.position = [curl * maximum
+                            for curl, finger_joints in zip(self.curls, FINGER_JOINTS)
+                            for _, maximum in finger_joints]
         self.publisher.publish(message)
 
 

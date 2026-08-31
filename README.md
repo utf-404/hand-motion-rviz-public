@@ -1,6 +1,6 @@
 # Mac webcam → ROS 2 RViz hand
 
-Mac 카메라에서 MediaPipe로 한 손의 다섯 손가락 굽힘 정도를 계산하고, Ubuntu의 ROS 2 브리지를 통해 RViz 손 모델에 반영하는 프로젝트입니다.
+Mac 카메라에서 MediaPipe로 한 손의 다섯 손가락 굽힘 정도를 계산하고, Ubuntu의 ROS 2 브리지를 통해 15관절 RViz 손 모델에 반영하는 프로젝트입니다.
 
 ```text
 Mac camera → hand_tracker.py → TCP/SSH tunnel → hand_bridge → /joint_states → RViz
@@ -14,6 +14,31 @@ Mac camera → hand_tracker.py → TCP/SSH tunnel → hand_bridge → /joint_sta
 - 예시 Ubuntu 계정/주소: `user@ubuntu-host`
 - Ubuntu 작업공간: `/path/to/hand-motion-rviz`
 
+## 가장 간단한 실행
+
+최초 설치와 SSH 키 등록이 끝났고 Ubuntu 데스크톱에 로그인되어 있다면 Mac 터미널 한 개에서 실행할 수 있습니다.
+
+```bash
+cd ~/Desktop/hand-motion-rviz
+./scripts/start_all.sh
+```
+
+이 스크립트가 다음 작업을 자동으로 수행합니다.
+
+1. SSH 터널 생성
+2. Ubuntu 패키지 빌드
+3. Ubuntu 화면에 ROS와 RViz 실행
+4. Mac 카메라 트래커 실행
+5. 트래커 창에서 `q`를 누르면 SSH 연결과 원격 ROS/RViz 종료
+
+카메라나 연결 정보를 바꿀 때는 환경 변수를 사용합니다.
+
+```bash
+HAND_RVIZ_CAMERA=1 ./scripts/start_all.sh
+HAND_RVIZ_REMOTE=user@ubuntu-host ./scripts/start_all.sh
+HAND_RVIZ_PORT=18765 ./scripts/start_all.sh
+```
+
 ## 최초 1회 설치
 
 ### Ubuntu
@@ -26,7 +51,7 @@ source /opt/ros/humble/setup.bash
 colcon build --symlink-install
 ```
 
-### Mac
+### Mac: 가상환경 사용
 
 Mac의 이 저장소 루트에서 실행합니다. 검증된 MediaPipe/OpenCV 버전이 `requirements.txt`에 고정되어 있습니다.
 
@@ -36,11 +61,37 @@ python3 -m venv .venv
 .venv/bin/python -m pip install -r src/hand_motion_rviz/mac/requirements.txt
 ```
 
+### Mac: 가상환경 없이 사용
+
+이 Mac에는 `pyenv` Python 3.11.5가 설치되어 있으므로 해당 Python에 패키지를 한 번 직접 설치할 수 있습니다. macOS 시스템 Python에 설치하는 방식보다 안전하지만, 이 Python을 사용하는 다른 프로젝트와 패키지 버전을 공유한다는 점은 주의해야 합니다.
+
+```bash
+cd ~/Desktop/hand-motion-rviz
+~/.pyenv/versions/3.11.5/bin/python3 -m pip install \
+  -r src/hand_motion_rviz/mac/requirements.txt
+```
+
+원클릭 실행 시 이 Python을 명시합니다.
+
+```bash
+HAND_RVIZ_PYTHON=~/.pyenv/versions/3.11.5/bin/python3 \
+  ./scripts/start_all.sh
+```
+
+트래커만 직접 실행할 수도 있습니다.
+
+```bash
+~/.pyenv/versions/3.11.5/bin/python3 \
+  src/hand_motion_rviz/mac/hand_tracker.py \
+  --host 127.0.0.1 \
+  --camera 0
+```
+
 macOS가 카메라 권한을 물으면 허용합니다. 나중에 변경하려면 **시스템 설정 → 개인정보 보호 및 보안 → 카메라**에서 사용하는 터미널 앱을 허용합니다.
 
-## 매번 실행하는 방법
+## 수동 실행 방법
 
-방화벽 설정이 필요 없고 통신도 암호화되는 SSH 터널 방식을 권장합니다. 아래 세 터미널을 순서대로 실행하고 계속 열어 둡니다.
+문제를 단계별로 확인하거나 각 프로세스를 따로 제어할 때 사용합니다. 방화벽 설정이 필요 없고 통신도 암호화되는 SSH 터널 방식이며, 아래 세 터미널을 순서대로 실행하고 계속 열어 둡니다.
 
 ### 1. Ubuntu: ROS와 RViz 시작
 
@@ -149,6 +200,20 @@ ros2 topic info /robot_description --verbose
 - RViz가 `/robot_description`을 구독
 - RViz Fixed Frame: `palm`
 
+## 손 모델 관절 구조
+
+카메라는 손가락마다 하나의 curl 값을 보내지만, 브리지가 이를 세 관절의 서로 다른 최대각으로 분배합니다.
+
+| 손가락 | 관절 | 최대 굽힘각 |
+| --- | --- | --- |
+| 엄지 | CMC / MCP / IP | 0.75 / 1.05 / 1.10 rad |
+| 검지 | MCP / PIP / DIP | 1.15 / 1.35 / 0.95 rad |
+| 중지 | MCP / PIP / DIP | 1.15 / 1.35 / 0.95 rad |
+| 약지 | MCP / PIP / DIP | 1.15 / 1.35 / 0.95 rad |
+| 소지 | MCP / PIP / DIP | 1.15 / 1.35 / 0.95 rad |
+
+총 15개의 revolute joint와 15개의 손가락 링크, 손바닥, 손목으로 구성됩니다. 외부 메시 패키지 없이 Xacro 기본 도형만 사용하므로 별도 모델 다운로드나 라이선스 의존성이 없습니다.
+
 ## 문제 해결
 
 ### `Waiting for ROS bridge: timed out`
@@ -177,13 +242,20 @@ ros2 topic info /robot_description --verbose
 
 ### `mediapipe`에 `solutions`가 없음
 
-호환되지 않는 최신 MediaPipe가 설치된 상태입니다. 저장소의 가상환경을 다시 만듭니다.
+호환되지 않는 최신 MediaPipe가 설치된 상태입니다. 가상환경을 사용한다면 저장소의 환경을 다시 만듭니다.
 
 ```bash
 cd ~/Desktop/hand-motion-rviz
 mv .venv .venv.old
 python3 -m venv .venv
 .venv/bin/python -m pip install -r src/hand_motion_rviz/mac/requirements.txt
+```
+
+가상환경을 사용하지 않는다면 pyenv Python에 고정 버전을 다시 설치합니다.
+
+```bash
+~/.pyenv/versions/3.11.5/bin/python3 -m pip install --force-reinstall \
+  -r src/hand_motion_rviz/mac/requirements.txt
 ```
 
 ## 주요 파일
@@ -193,3 +265,5 @@ python3 -m venv .venv
 - `src/hand_motion_rviz/launch/hand_rviz.launch.py`: 브리지, robot_state_publisher, RViz 실행
 - `src/hand_motion_rviz/urdf/hand.urdf.xacro`: 손 모델
 - `src/hand_motion_rviz/config/hand.rviz`: RViz 표시와 카메라 시점
+- `scripts/start_all.sh`: Mac에서 전체 시스템 원클릭 실행
+- `scripts/start_ubuntu.sh`: Ubuntu 빌드 및 ROS/RViz 실행

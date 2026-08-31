@@ -70,6 +70,8 @@ def main():
             cv2.imshow('Hand tracker (press q to quit)', frame)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
+    except KeyboardInterrupt:
+        pass
     finally:
         hands.close()
         camera.release()
