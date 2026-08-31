@@ -1,6 +1,6 @@
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.conditions import IfCondition
+from launch.conditions import IfCondition, UnlessCondition
 from launch.substitutions import Command, LaunchConfiguration
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
@@ -13,11 +13,20 @@ def generate_launch_description():
     rviz_config = os.path.join(share, 'config', 'hand.rviz')
     robot_description = Command(['xacro ', model])
     return LaunchDescription([
-        DeclareLaunchArgument('rviz', default_value='true'),
+        DeclareLaunchArgument('rviz', default_value='true',
+                              description='Start RViz on the Ubuntu desktop'),
+        DeclareLaunchArgument('demo', default_value='false',
+                              description='Animate the hand without a Mac camera'),
+        DeclareLaunchArgument('port', default_value='8765',
+                              description='TCP port used by the Mac tracker'),
         Node(package='robot_state_publisher', executable='robot_state_publisher',
              parameters=[{'robot_description': robot_description}]),
         Node(package='hand_motion_rviz', executable='hand_bridge',
-             arguments=[]),
+             arguments=['--port', LaunchConfiguration('port')],
+             condition=UnlessCondition(LaunchConfiguration('demo'))),
+        Node(package='hand_motion_rviz', executable='hand_bridge',
+             arguments=['--demo'],
+             condition=IfCondition(LaunchConfiguration('demo'))),
         Node(package='rviz2', executable='rviz2', condition=IfCondition(LaunchConfiguration('rviz')),
-             arguments=['-d', rviz_config], parameters=[{'robot_description': robot_description}]),
+             arguments=['-d', rviz_config]),
     ])

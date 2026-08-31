@@ -38,20 +38,28 @@ def main():
     parser = argparse.ArgumentParser(description='Send webcam hand curls to an RViz hand.')
     parser.add_argument('--host', required=True, help='Ubuntu computer IP, e.g. 192.0.2.10')
     parser.add_argument('--port', type=int, default=8765)
+    parser.add_argument('--camera', type=int, default=0, help='macOS camera index (default: 0)')
     args = parser.parse_args()
     sock = connect(args.host, args.port)
-    camera = cv2.VideoCapture(0)
+    camera = cv2.VideoCapture(args.camera, cv2.CAP_AVFOUNDATION)
     if not camera.isOpened():
         raise RuntimeError('Could not open the Mac camera. Grant Terminal camera permission and retry.')
     hands = mp.solutions.hands.Hands(max_num_hands=1, min_detection_confidence=0.6,
                                     min_tracking_confidence=0.6)
     draw = mp.solutions.drawing_utils
+    failed_reads = 0
     try:
         while True:
             ok, frame = camera.read()
             if not ok:
-                break
-            result = hands.process(cv2.cvtColor(cv2.flip(frame, 1), cv2.COLOR_BGR2RGB))
+                failed_reads += 1
+                if failed_reads >= 50:
+                    raise RuntimeError('The Mac camera opened but did not produce frames.')
+                time.sleep(0.1)
+                continue
+            failed_reads = 0
+            frame = cv2.flip(frame, 1)
+            result = hands.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
             if result.multi_hand_landmarks:
                 points = result.multi_hand_landmarks[0].landmark
                 curls = [curl(points, 1, 2, 4), curl(points, 5, 6, 8),
@@ -59,7 +67,7 @@ def main():
                          curl(points, 17, 18, 20)]
                 sock.sendall((json.dumps({'curls': curls}) + '\n').encode())
                 draw.draw_landmarks(frame, result.multi_hand_landmarks[0], mp.solutions.hands.HAND_CONNECTIONS)
-            cv2.imshow('Hand tracker (press q to quit)', cv2.flip(frame, 1))
+            cv2.imshow('Hand tracker (press q to quit)', frame)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
     finally:
