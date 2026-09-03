@@ -1,9 +1,9 @@
-# Mac webcam → ROS 2 RViz hand
+# Mac webcam → ROS 2 RViz two hands
 
-Mac 카메라에서 MediaPipe로 한 손의 다섯 손가락 굽힘 정도를 계산하고, Ubuntu의 ROS 2 브리지를 통해 15관절 RViz 손 모델에 반영하는 프로젝트입니다.
+Mac 카메라에서 MediaPipe로 왼손과 오른손의 손가락 굽힘 정도를 각각 계산하고, Ubuntu의 ROS 2 브리지를 통해 30관절 RViz 양손 모델에 반영하는 프로젝트입니다.
 
 ```text
-Mac camera → hand_tracker.py → TCP/SSH tunnel → hand_bridge → /joint_states → RViz
+Mac camera → left/right curls → TCP/SSH tunnel → hand_bridge → /joint_states → RViz
 ```
 
 ## 환경
@@ -14,24 +14,38 @@ Mac camera → hand_tracker.py → TCP/SSH tunnel → hand_bridge → /joint_sta
 - 예시 Ubuntu 계정/주소: `user@ubuntu-host`
 - Ubuntu 작업공간: `/path/to/hand-motion-rviz`
 
-## 가장 간단한 실행
+## 실행 방법 요약
 
-최초 설치와 SSH 키 등록이 끝났고 Ubuntu 데스크톱에 로그인되어 있다면 Mac 터미널 한 개에서 실행할 수 있습니다.
+Ubuntu 데스크톱에 로그인되어 있고 최초 설치를 완료했다면, 다음 순서로 실행합니다.
+
+### 1. Mac의 최신 코드를 Ubuntu로 복사
+
+Mac 터미널에서 실행합니다. Ubuntu에 이미 최신 코드가 있다면 이 단계는 생략할 수 있습니다.
+
+```bash
+cd ~/Desktop/hand-motion-rviz
+rsync -av \
+  --exclude .git --exclude .venv \
+  --exclude build --exclude install --exclude log \
+  ./ user@ubuntu-host:/path/to/hand-motion-rviz/
+```
+
+### 2. Ubuntu RViz와 Mac 카메라를 함께 실행
+
+같은 Mac 터미널에서 실행합니다.
 
 ```bash
 cd ~/Desktop/hand-motion-rviz
 ./scripts/start_all.sh
 ```
 
-이 스크립트가 다음 작업을 자동으로 수행합니다.
+이 명령 하나가 SSH 터널 생성, Ubuntu 빌드, ROS/RViz 실행, Mac 카메라 추적기 실행을 모두 처리합니다. Mac의 `Two-hand tracker` 창에 양손을 보여주면 Ubuntu RViz의 양손 모델이 각각 움직입니다.
 
-1. SSH 터널 생성
-2. Ubuntu 패키지 빌드
-3. Ubuntu 화면에 ROS와 RViz 실행
-4. Mac 카메라 트래커 실행
-5. 트래커 창에서 `q`를 누르면 SSH 연결과 원격 ROS/RViz 종료
+### 3. 종료
 
-카메라나 연결 정보를 바꿀 때는 환경 변수를 사용합니다.
+Mac의 `Two-hand tracker` 창에서 `q`를 누르면 카메라 추적기, SSH 연결, Ubuntu ROS/RViz가 함께 종료됩니다.
+
+카메라 번호나 연결 정보를 바꿀 때는 다음처럼 실행합니다.
 
 ```bash
 HAND_RVIZ_CAMERA=1 ./scripts/start_all.sh
@@ -127,7 +141,7 @@ cd ~/Desktop/hand-motion-rviz
   --camera 0
 ```
 
-`Connected to 127.0.0.1:8765`가 출력되면 연결된 상태입니다. `Hand tracker` 창에 손 전체가 보이도록 하면 Ubuntu RViz의 파란색 손가락이 움직입니다.
+`Connected to 127.0.0.1:8765`가 출력되면 연결된 상태입니다. `Two-hand tracker` 창에 양손 전체가 보이도록 하면 Ubuntu RViz의 왼손과 오른손이 각각 움직입니다. 화면에서 사라진 손은 열린 자세로 돌아갑니다.
 
 내장 카메라 대신 다른 카메라가 열리면 `--camera 1`을 사용합니다.
 
@@ -198,11 +212,12 @@ ros2 topic info /robot_description --verbose
 - 노드: `/hand_bridge`, `/robot_state_publisher`, `/rviz`
 - `/joint_states`: 약 30Hz
 - RViz가 `/robot_description`을 구독
-- RViz Fixed Frame: `palm`
+- `/joint_states`: 왼손 15개와 오른손 15개, 총 30개 관절
+- RViz Fixed Frame: `hands_base`
 
 ## 손 모델 관절 구조
 
-카메라는 손가락마다 하나의 curl 값을 보내지만, 브리지가 이를 세 관절의 서로 다른 최대각으로 분배합니다.
+카메라는 왼손과 오른손을 구분하여 손가락마다 하나의 curl 값을 보냅니다. 브리지는 각 값을 해당 손가락의 세 관절에 서로 다른 최대각으로 분배합니다. 모든 링크와 관절 이름에는 `left_` 또는 `right_` 접두사가 붙습니다.
 
 | 손가락 | 관절 | 최대 굽힘각 |
 | --- | --- | --- |
@@ -212,7 +227,7 @@ ros2 topic info /robot_description --verbose
 | 약지 | MCP / PIP / DIP | 1.15 / 1.35 / 0.95 rad |
 | 소지 | MCP / PIP / DIP | 1.15 / 1.35 / 0.95 rad |
 
-총 15개의 revolute joint와 15개의 손가락 링크, 손바닥, 손목으로 구성됩니다. 외부 메시 패키지 없이 Xacro 기본 도형만 사용하므로 별도 모델 다운로드나 라이선스 의존성이 없습니다.
+손마다 15개씩 총 30개의 revolute joint가 있으며, 두 손은 공통 루트 링크 `hands_base` 아래에 좌우 대칭으로 배치됩니다. 외부 메시 패키지 없이 Xacro 기본 도형만 사용하므로 별도 모델 다운로드나 라이선스 의존성이 없습니다.
 
 ## 문제 해결
 
@@ -226,8 +241,8 @@ ros2 topic info /robot_description --verbose
 ### RViz에 손 모델이 보이지 않음
 
 - Ubuntu 데스크톱에서 RViz 창이 실제로 실행 중인지 확인합니다.
-- Displays에서 `Robot Hand`가 활성화되어 있는지 확인합니다.
-- Global Options의 Fixed Frame이 `palm`인지 확인합니다.
+- Displays에서 `Robot Hands`가 활성화되어 있는지 확인합니다.
+- Global Options의 Fixed Frame이 `hands_base`인지 확인합니다.
 - 다음 명령의 `/rviz` 구독이 1개인지 확인합니다.
 
 ```bash

@@ -1,107 +1,121 @@
 <?xml version="1.0"?>
-<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="camera_hand">
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="camera_hands">
   <material name="bone_blue"><color rgba="0.12 0.52 0.92 1"/></material>
   <material name="joint_cyan"><color rgba="0.20 0.82 0.95 1"/></material>
   <material name="palm_dark"><color rgba="0.06 0.10 0.18 1"/></material>
   <material name="wrist_gray"><color rgba="0.22 0.28 0.36 1"/></material>
 
-  <xacro:macro name="segment" params="name length radius">
-    <link name="${name}">
-      <visual name="${name}_bone">
+  <!-- A common root lets robot_state_publisher expose both hands as one model. -->
+  <link name="hands_base"/>
+
+  <xacro:macro name="segment" params="prefix name length radius">
+    <link name="${prefix}_${name}">
+      <visual name="${prefix}_${name}_bone">
         <origin xyz="${length / 2} 0 0" rpy="0 1.57079632679 0"/>
         <geometry><cylinder length="${length}" radius="${radius}"/></geometry>
         <material name="bone_blue"/>
       </visual>
-      <visual name="${name}_joint">
+      <visual name="${prefix}_${name}_joint">
         <geometry><sphere radius="${radius * 1.16}"/></geometry>
         <material name="joint_cyan"/>
       </visual>
     </link>
   </xacro:macro>
 
-  <xacro:macro name="finger" params="name x y yaw proximal middle distal radius">
-    <joint name="${name}_mcp_joint" type="revolute">
-      <parent link="palm"/><child link="${name}_proximal"/>
+  <xacro:macro name="finger" params="prefix name x y yaw proximal middle distal radius">
+    <joint name="${prefix}_${name}_mcp_joint" type="revolute">
+      <parent link="${prefix}_palm"/><child link="${prefix}_${name}_proximal"/>
       <origin xyz="${x} ${y} 0" rpy="0 0 ${yaw}"/>
       <axis xyz="0 1 0"/>
       <limit lower="0" upper="1.15" effort="2" velocity="3"/>
     </joint>
-    <xacro:segment name="${name}_proximal" length="${proximal}" radius="${radius}"/>
+    <xacro:segment prefix="${prefix}" name="${name}_proximal" length="${proximal}" radius="${radius}"/>
 
-    <joint name="${name}_pip_joint" type="revolute">
-      <parent link="${name}_proximal"/><child link="${name}_middle"/>
+    <joint name="${prefix}_${name}_pip_joint" type="revolute">
+      <parent link="${prefix}_${name}_proximal"/><child link="${prefix}_${name}_middle"/>
       <origin xyz="${proximal} 0 0" rpy="0 0 0"/>
       <axis xyz="0 1 0"/>
       <limit lower="0" upper="1.35" effort="2" velocity="3"/>
     </joint>
-    <xacro:segment name="${name}_middle" length="${middle}" radius="${radius * 0.88}"/>
+    <xacro:segment prefix="${prefix}" name="${name}_middle" length="${middle}" radius="${radius * 0.88}"/>
 
-    <joint name="${name}_dip_joint" type="revolute">
-      <parent link="${name}_middle"/><child link="${name}_distal"/>
+    <joint name="${prefix}_${name}_dip_joint" type="revolute">
+      <parent link="${prefix}_${name}_middle"/><child link="${prefix}_${name}_distal"/>
       <origin xyz="${middle} 0 0" rpy="0 0 0"/>
       <axis xyz="0 1 0"/>
       <limit lower="0" upper="0.95" effort="2" velocity="3"/>
     </joint>
-    <xacro:segment name="${name}_distal" length="${distal}" radius="${radius * 0.76}"/>
+    <xacro:segment prefix="${prefix}" name="${name}_distal" length="${distal}" radius="${radius * 0.76}"/>
   </xacro:macro>
 
-  <xacro:macro name="thumb" params="x y yaw proximal middle distal radius">
-    <joint name="thumb_cmc_joint" type="revolute">
-      <parent link="palm"/><child link="thumb_proximal"/>
+  <xacro:macro name="thumb" params="prefix x y yaw proximal middle distal radius">
+    <joint name="${prefix}_thumb_cmc_joint" type="revolute">
+      <parent link="${prefix}_palm"/><child link="${prefix}_thumb_proximal"/>
       <origin xyz="${x} ${y} -0.002" rpy="0 0 ${yaw}"/>
       <axis xyz="0 1 0"/>
       <limit lower="0" upper="0.75" effort="2" velocity="3"/>
     </joint>
-    <xacro:segment name="thumb_proximal" length="${proximal}" radius="${radius}"/>
+    <xacro:segment prefix="${prefix}" name="thumb_proximal" length="${proximal}" radius="${radius}"/>
 
-    <joint name="thumb_mcp_joint" type="revolute">
-      <parent link="thumb_proximal"/><child link="thumb_middle"/>
+    <joint name="${prefix}_thumb_mcp_joint" type="revolute">
+      <parent link="${prefix}_thumb_proximal"/><child link="${prefix}_thumb_middle"/>
       <origin xyz="${proximal} 0 0" rpy="0 0 0"/>
       <axis xyz="0 1 0"/>
       <limit lower="0" upper="1.05" effort="2" velocity="3"/>
     </joint>
-    <xacro:segment name="thumb_middle" length="${middle}" radius="${radius * 0.88}"/>
+    <xacro:segment prefix="${prefix}" name="thumb_middle" length="${middle}" radius="${radius * 0.88}"/>
 
-    <joint name="thumb_ip_joint" type="revolute">
-      <parent link="thumb_middle"/><child link="thumb_distal"/>
+    <joint name="${prefix}_thumb_ip_joint" type="revolute">
+      <parent link="${prefix}_thumb_middle"/><child link="${prefix}_thumb_distal"/>
       <origin xyz="${middle} 0 0" rpy="0 0 0"/>
       <axis xyz="0 1 0"/>
       <limit lower="0" upper="1.10" effort="2" velocity="3"/>
     </joint>
-    <xacro:segment name="thumb_distal" length="${distal}" radius="${radius * 0.76}"/>
+    <xacro:segment prefix="${prefix}" name="thumb_distal" length="${distal}" radius="${radius * 0.76}"/>
   </xacro:macro>
 
-  <link name="palm">
-    <visual name="palm_body">
-      <geometry><box size="0.13 0.10 0.026"/></geometry>
-      <material name="palm_dark"/>
-    </visual>
-    <visual name="palm_knuckle_bar">
-      <origin xyz="0.058 0 0"/>
-      <geometry><box size="0.018 0.092 0.032"/></geometry>
-      <material name="joint_cyan"/>
-    </visual>
-  </link>
+  <!-- side is +1 for the left hand and -1 for the right hand. -->
+  <xacro:macro name="hand" params="prefix side offset_y">
+    <link name="${prefix}_palm">
+      <visual name="${prefix}_palm_body">
+        <geometry><box size="0.13 0.10 0.026"/></geometry>
+        <material name="palm_dark"/>
+      </visual>
+      <visual name="${prefix}_palm_knuckle_bar">
+        <origin xyz="0.058 0 0"/>
+        <geometry><box size="0.018 0.092 0.032"/></geometry>
+        <material name="joint_cyan"/>
+      </visual>
+    </link>
 
-  <joint name="palm_to_wrist" type="fixed">
-    <parent link="palm"/><child link="wrist"/>
-    <origin xyz="-0.082 0 0" rpy="0 0 0"/>
-  </joint>
-  <link name="wrist">
-    <visual>
-      <geometry><box size="0.045 0.072 0.032"/></geometry>
-      <material name="wrist_gray"/>
-    </visual>
-  </link>
+    <joint name="${prefix}_base_joint" type="fixed">
+      <parent link="hands_base"/><child link="${prefix}_palm"/>
+      <origin xyz="0 ${offset_y} 0" rpy="0 0 0"/>
+    </joint>
 
-  <xacro:thumb x="-0.012" y="-0.052" yaw="-0.72"
-               proximal="0.034" middle="0.025" distal="0.021" radius="0.0095"/>
-  <xacro:finger name="index" x="0.062" y="-0.032" yaw="-0.03"
-                proximal="0.044" middle="0.029" distal="0.023" radius="0.0085"/>
-  <xacro:finger name="middle" x="0.064" y="-0.010" yaw="0"
-                proximal="0.049" middle="0.032" distal="0.025" radius="0.0088"/>
-  <xacro:finger name="ring" x="0.062" y="0.014" yaw="0.025"
-                proximal="0.045" middle="0.030" distal="0.023" radius="0.0085"/>
-  <xacro:finger name="little" x="0.057" y="0.037" yaw="0.07"
-                proximal="0.036" middle="0.024" distal="0.019" radius="0.0075"/>
+    <joint name="${prefix}_palm_to_wrist" type="fixed">
+      <parent link="${prefix}_palm"/><child link="${prefix}_wrist"/>
+      <origin xyz="-0.082 0 0" rpy="0 0 0"/>
+    </joint>
+    <link name="${prefix}_wrist">
+      <visual>
+        <geometry><box size="0.045 0.072 0.032"/></geometry>
+        <material name="wrist_gray"/>
+      </visual>
+    </link>
+
+    <xacro:thumb prefix="${prefix}" x="-0.012" y="${side * 0.052}" yaw="${side * 0.72}"
+                 proximal="0.034" middle="0.025" distal="0.021" radius="0.0095"/>
+    <xacro:finger prefix="${prefix}" name="index" x="0.062" y="${side * 0.032}" yaw="${side * 0.03}"
+                  proximal="0.044" middle="0.029" distal="0.023" radius="0.0085"/>
+    <xacro:finger prefix="${prefix}" name="middle" x="0.064" y="${side * 0.010}" yaw="0"
+                  proximal="0.049" middle="0.032" distal="0.025" radius="0.0088"/>
+    <xacro:finger prefix="${prefix}" name="ring" x="0.062" y="${side * -0.014}" yaw="${side * -0.025}"
+                  proximal="0.045" middle="0.030" distal="0.023" radius="0.0085"/>
+    <xacro:finger prefix="${prefix}" name="little" x="0.057" y="${side * -0.037}" yaw="${side * -0.07}"
+                  proximal="0.036" middle="0.024" distal="0.019" radius="0.0075"/>
+  </xacro:macro>
+
+  <xacro:hand prefix="left" side="1" offset_y="0.13"/>
+  <xacro:hand prefix="right" side="-1" offset_y="-0.13"/>
 </robot>

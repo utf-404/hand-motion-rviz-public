@@ -2,7 +2,7 @@
 <package format="3">
   <name>hand_motion_rviz</name>
   <version>0.1.0</version>
-  <description>Mirror a webcam-tracked hand in RViz.</description>
+  <description>Mirror two webcam-tracked hands in RViz.</description>
   <maintainer email="138092660+utf-404@users.noreply.github.com">user</maintainer>
   <license>Apache-2.0</license>
   <buildtool_depend>ament_python</buildtool_depend>

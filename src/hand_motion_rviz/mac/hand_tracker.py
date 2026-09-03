@@ -1,4 +1,4 @@
-"""Run on macOS: track one hand with the built-in camera and send curls to ROS."""
+"""Run on macOS: track both hands with the built-in camera and send curls to ROS."""
 import argparse
 import json
 import math
@@ -35,7 +35,7 @@ def connect(host, port):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Send webcam hand curls to an RViz hand.')
+    parser = argparse.ArgumentParser(description='Send webcam hand curls to two RViz hands.')
     parser.add_argument('--host', required=True, help='Ubuntu computer IP, e.g. 192.0.2.10')
     parser.add_argument('--port', type=int, default=8765)
     parser.add_argument('--camera', type=int, default=0, help='macOS camera index (default: 0)')
@@ -44,7 +44,7 @@ def main():
     camera = cv2.VideoCapture(args.camera, cv2.CAP_AVFOUNDATION)
     if not camera.isOpened():
         raise RuntimeError('Could not open the Mac camera. Grant Terminal camera permission and retry.')
-    hands = mp.solutions.hands.Hands(max_num_hands=1, min_detection_confidence=0.6,
+    hands = mp.solutions.hands.Hands(max_num_hands=2, min_detection_confidence=0.6,
                                     min_tracking_confidence=0.6)
     draw = mp.solutions.drawing_utils
     failed_reads = 0
@@ -60,14 +60,28 @@ def main():
             failed_reads = 0
             frame = cv2.flip(frame, 1)
             result = hands.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-            if result.multi_hand_landmarks:
-                points = result.multi_hand_landmarks[0].landmark
-                curls = [curl(points, 1, 2, 4), curl(points, 5, 6, 8),
-                         curl(points, 9, 10, 12), curl(points, 13, 14, 16),
-                         curl(points, 17, 18, 20)]
-                sock.sendall((json.dumps({'curls': curls}) + '\n').encode())
-                draw.draw_landmarks(frame, result.multi_hand_landmarks[0], mp.solutions.hands.HAND_CONNECTIONS)
-            cv2.imshow('Hand tracker (press q to quit)', frame)
+            tracked_hands = {'left': [0.0] * 5, 'right': [0.0] * 5}
+            if result.multi_hand_landmarks and result.multi_handedness:
+                for hand_landmarks, handedness in zip(
+                        result.multi_hand_landmarks, result.multi_handedness):
+                    side = handedness.classification[0].label.lower()
+                    points = hand_landmarks.landmark
+                    tracked_hands[side] = [
+                        curl(points, 1, 2, 4), curl(points, 5, 6, 8),
+                        curl(points, 9, 10, 12), curl(points, 13, 14, 16),
+                        curl(points, 17, 18, 20),
+                    ]
+                    draw.draw_landmarks(
+                        frame, hand_landmarks, mp.solutions.hands.HAND_CONNECTIONS)
+                    wrist = points[0]
+                    cv2.putText(
+                        frame, side.capitalize(),
+                        (int(wrist.x * frame.shape[1]), int(wrist.y * frame.shape[0])),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
+
+            # Send every frame so a hand that leaves the image returns to an open pose.
+            sock.sendall((json.dumps({'hands': tracked_hands}) + '\n').encode())
+            cv2.imshow('Two-hand tracker (press q to quit)', frame)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
     except KeyboardInterrupt:

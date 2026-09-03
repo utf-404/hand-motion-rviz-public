@@ -18,7 +18,7 @@ setup(
     zip_safe=True,
     maintainer='user',
     maintainer_email='138092660+utf-404@users.noreply.github.com',
-    description='Mirror a webcam-tracked hand in RViz.',
+    description='Mirror two webcam-tracked hands in RViz.',
     license='Apache-2.0',
     entry_points={'console_scripts': ['hand_bridge = hand_motion_rviz.hand_bridge:main']},
 )

@@ -1,4 +1,4 @@
-"""Receive newline-delimited JSON finger curls over TCP and publish JointState."""
+"""Receive newline-delimited JSON curls for both hands and publish JointState."""
 import argparse
 import json
 import math
@@ -11,6 +11,7 @@ from sensor_msgs.msg import JointState
 
 
 FINGERS = ('thumb', 'index', 'middle', 'ring', 'little')
+HANDS = ('left', 'right')
 FINGER_JOINTS = (
     (('thumb_cmc_joint', 0.75), ('thumb_mcp_joint', 1.05), ('thumb_ip_joint', 1.10)),
     (('index_mcp_joint', 1.15), ('index_pip_joint', 1.35), ('index_dip_joint', 0.95)),
@@ -18,14 +19,18 @@ FINGER_JOINTS = (
     (('ring_mcp_joint', 1.15), ('ring_pip_joint', 1.35), ('ring_dip_joint', 0.95)),
     (('little_mcp_joint', 1.15), ('little_pip_joint', 1.35), ('little_dip_joint', 0.95)),
 )
-JOINTS = [joint for finger_joints in FINGER_JOINTS for joint, _ in finger_joints]
+JOINTS = [f'{hand}_{joint}'
+          for hand in HANDS
+          for finger_joints in FINGER_JOINTS
+          for joint, _ in finger_joints]
 
 
 class HandBridge(Node):
     def __init__(self, port: int, demo: bool):
         super().__init__('hand_bridge')
         self.publisher = self.create_publisher(JointState, 'joint_states', 10)
-        self.curls = [0.0] * len(FINGERS)
+        self.curls = {hand: [0.0] * len(FINGERS) for hand in HANDS}
+        self.curls_lock = threading.Lock()
         self.demo = demo
         self.start_time = self.get_clock().now().nanoseconds / 1e9
         self.create_timer(1 / 30, self.publish_state)
@@ -47,24 +52,39 @@ class HandBridge(Node):
                 for line in stream:
                     try:
                         data = json.loads(line)
-                        values = data['curls']
-                        if len(values) != len(FINGERS):
-                            raise ValueError('expected five curls')
-                        self.curls = [max(0.0, min(1.0, float(value))) for value in values]
+                        hands = data['hands']
+                        if not isinstance(hands, dict):
+                            raise TypeError('hands must be an object')
+                        parsed = {}
+                        for hand in HANDS:
+                            values = hands[hand]
+                            if len(values) != len(FINGERS):
+                                raise ValueError(f'expected five curls for {hand} hand')
+                            parsed[hand] = [max(0.0, min(1.0, float(value)))
+                                            for value in values]
+                        with self.curls_lock:
+                            self.curls = parsed
                     except (KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
                         self.get_logger().warning(f'Ignoring invalid tracker data: {error}')
 
     def publish_state(self):
         if self.demo:
             elapsed = self.get_clock().now().nanoseconds / 1e9 - self.start_time
-            self.curls = [(math.sin(elapsed * 1.7 + index * 0.55) + 1.0) / 2.0
-                          for index in range(len(FINGERS))]
+            with self.curls_lock:
+                self.curls = {
+                    hand: [(math.sin(elapsed * 1.7 + index * 0.55 + hand_index * math.pi) + 1.0) / 2.0
+                           for index in range(len(FINGERS))]
+                    for hand_index, hand in enumerate(HANDS)
+                }
+        with self.curls_lock:
+            curls = {hand: values[:] for hand, values in self.curls.items()}
         message = JointState()
         message.header.stamp = self.get_clock().now().to_msg()
         message.name = JOINTS
         # A single curl value drives the three anatomical joints of each finger.
         message.position = [curl * maximum
-                            for curl, finger_joints in zip(self.curls, FINGER_JOINTS)
+                            for hand in HANDS
+                            for curl, finger_joints in zip(curls[hand], FINGER_JOINTS)
                             for _, maximum in finger_joints]
         self.publisher.publish(message)
 
