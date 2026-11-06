@@ -1,3 +1,1 @@
-numpy<2
-mediapipe==0.10.21
-opencv-contrib-python==4.11.0.86
+-r ../tracker/requirements.txt

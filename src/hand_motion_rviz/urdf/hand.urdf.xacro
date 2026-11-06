@@ -3,6 +3,7 @@
   <material name="bone_blue"><color rgba="0.12 0.52 0.92 1"/></material>
   <material name="joint_cyan"><color rgba="0.20 0.82 0.95 1"/></material>
   <material name="palm_dark"><color rgba="0.06 0.10 0.18 1"/></material>
+  <material name="palm_pad"><color rgba="0.20 0.42 0.48 1"/></material>
   <material name="wrist_gray"><color rgba="0.22 0.28 0.36 1"/></material>
 
   <!-- A common root lets robot_state_publisher expose both hands as one model. -->
@@ -86,11 +87,40 @@
         <geometry><box size="0.018 0.092 0.032"/></geometry>
         <material name="joint_cyan"/>
       </visual>
+      <!-- Positive finger flexion bends toward -Z, the palmar surface. -->
+      <visual name="${prefix}_palm_pad">
+        <origin xyz="-0.008 0 -0.014"/>
+        <geometry><box size="0.086 0.073 0.004"/></geometry>
+        <material name="palm_pad"/>
+      </visual>
     </link>
 
+    <link name="${prefix}_mount"/>
     <joint name="${prefix}_base_joint" type="fixed">
-      <parent link="hands_base"/><child link="${prefix}_palm"/>
+      <parent link="hands_base"/><child link="${prefix}_mount"/>
       <origin xyz="0 ${offset_y} 0" rpy="0 0 0"/>
+    </joint>
+
+    <!-- Rz(yaw) Ry(pitch) Rx(roll): neutral orientation preserves finger axes. -->
+    <link name="${prefix}_wrist_yaw"/>
+    <joint name="${prefix}_wrist_yaw_joint" type="continuous">
+      <parent link="${prefix}_mount"/><child link="${prefix}_wrist_yaw"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <axis xyz="0 0 1"/>
+      <limit effort="2" velocity="3"/>
+    </joint>
+    <link name="${prefix}_wrist_pitch"/>
+    <joint name="${prefix}_wrist_pitch_joint" type="continuous">
+      <parent link="${prefix}_wrist_yaw"/><child link="${prefix}_wrist_pitch"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+      <limit effort="2" velocity="3"/>
+    </joint>
+    <joint name="${prefix}_wrist_roll_joint" type="continuous">
+      <parent link="${prefix}_wrist_pitch"/><child link="${prefix}_palm"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <axis xyz="1 0 0"/>
+      <limit effort="2" velocity="3"/>
     </joint>
 
     <joint name="${prefix}_palm_to_wrist" type="fixed">
@@ -116,6 +146,6 @@
                   proximal="0.036" middle="0.024" distal="0.019" radius="0.0075"/>
   </xacro:macro>
 
-  <xacro:hand prefix="left" side="1" offset_y="0.13"/>
-  <xacro:hand prefix="right" side="-1" offset_y="-0.13"/>
+  <xacro:hand prefix="left" side="1" offset_y="-0.13"/>
+  <xacro:hand prefix="right" side="-1" offset_y="0.13"/>
 </robot>

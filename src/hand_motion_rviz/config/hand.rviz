@@ -19,7 +19,7 @@ Visualization Manager:
       Offset:
         X: 0
         Y: 0
-        Z: -0.02
+        Z: 0.03
       Plane: XY
       Plane Cell Count: 10
       Reference Frame: <Fixed Frame>
@@ -58,8 +58,8 @@ Visualization Manager:
         Z: 0
       Name: Hands View
       Near Clip Distance: 0.01
-      Pitch: 0.55
+      Pitch: -1.4
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.8
+      Yaw: 0
     Saved: ~
