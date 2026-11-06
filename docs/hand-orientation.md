@@ -34,3 +34,10 @@ URDF 관절 구조와 기본 화면 투영은 회귀 검사로 확인한다.
 콜론 등이 포함돼도 모델 로딩이 깨지지 않아야 한다. 설치된 launch에서
 합성 좌표→TCP→관절→robot_state_publisher→양손 palm TF까지 확인하는
 `test_ros_model_launch.py`로 이 경로를 검증한다.
+
+## 외형 메시
+
+손바닥·손가락 외형은 저장소의 생성기로 만든 로컬 STL이며 Xacro의 visual에
+적용한다. 관절 origin/axis/limit과 링크 이름은 외형 개선 전과 동일하다.
+메시는 package://hand_motion_rviz/meshes/로 참조하고 setup.py에서 함께 설치한다.
+따라서 외형 변경은 기존 curl/RPY 전달과 TF 구조에 영향을 주지 않는다.

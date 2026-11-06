@@ -201,7 +201,22 @@ Ubuntu 데스크톱에서 실행하고, Displays의 `Robot Hands`와 Fixed Frame
 
 손목은 손마다 yaw(Z) → pitch(Y) → roll(X)의 연속 관절로 연결됩니다. 손목 방향은 손목·검지/중지/소지 MCP의 3D 위치로 계산하며, 가능하면 MediaPipe world landmarks를 사용합니다. 손가락 curl과 손목 방향을 같은 프레임으로 전달합니다.
 
-양손은 공통 루트 `hands_base` 아래 배치되며 링크·관절에는 `left_` 또는 `right_` 접두사가 붙습니다. Xacro 기본 도형으로 모델을 구성해 외부 메시가 필요하지 않습니다.
+양손은 공통 루트 `hands_base` 아래 배치되며 링크·관절에는 `left_` 또는 `right_` 접두사가 붙습니다. 둥근 손바닥과 테이퍼 손가락의 로컬 메시를 패키지에 함께 설치하므로 외부 모델 다운로드가 필요하지 않습니다. 기존 관절 위치·회전축·각도 범위는 유지합니다.
+
+### 모델 외형 미리보기
+
+밝은 외장, 짙은 관절과 패드로 손바닥·마디를 구분합니다. 아래 이미지는 실제 URDF를 별도로 렌더링한 모델 미리보기이며 RViz 화면 캡처는 아닙니다.
+
+![URDF 모델 미리보기](docs/hand-model-preview.png)
+
+메시를 다시 생성하거나 미리보기를 만들려면 저장소 루트에서 실행합니다.
+
+```bash
+python3 scripts/generate_hand_meshes.py
+.venv/bin/python scripts/render_hand_preview.py
+```
+
+미리보기 생성에는 카메라 가상환경의 NumPy/Matplotlib과 ROS의 `xacro`를 사용합니다. 일반 RViz 실행에는 미리보기 생성이 필요하지 않습니다.
 
 TCP에는 UTF-8 JSON 뒤에 줄바꿈(`\n`)을 붙여 보냅니다. `left`, `right`는 엄지부터 소지까지 숫자 다섯 개이며 유한한 값은 0~1로 제한됩니다. 문자열·boolean·NaN·Infinity는 허용하지 않습니다. 프레임 크기는 최대 16 KiB입니다.
 

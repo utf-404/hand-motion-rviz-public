@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="camera_hands">
-  <material name="bone_blue"><color rgba="0.12 0.52 0.92 1"/></material>
-  <material name="joint_cyan"><color rgba="0.20 0.82 0.95 1"/></material>
-  <material name="palm_dark"><color rgba="0.06 0.10 0.18 1"/></material>
-  <material name="palm_pad"><color rgba="0.20 0.42 0.48 1"/></material>
-  <material name="wrist_gray"><color rgba="0.22 0.28 0.36 1"/></material>
+  <material name="shell_ivory"><color rgba="0.82 0.86 0.88 1"/></material>
+  <material name="joint_graphite"><color rgba="0.10 0.13 0.16 1"/></material>
+  <material name="grip_rubber"><color rgba="0.20 0.26 0.29 1"/></material>
+  <material name="accent_teal"><color rgba="0.10 0.61 0.59 1"/></material>
+  <material name="hinge_steel"><color rgba="0.46 0.53 0.57 1"/></material>
 
   <!-- A common root lets robot_state_publisher expose both hands as one model. -->
   <link name="hands_base"/>
@@ -12,14 +12,36 @@
   <xacro:macro name="segment" params="prefix name length radius">
     <link name="${prefix}_${name}">
       <visual name="${prefix}_${name}_bone">
-        <origin xyz="${length / 2} 0 0" rpy="0 1.57079632679 0"/>
-        <geometry><cylinder length="${length}" radius="${radius}"/></geometry>
-        <material name="bone_blue"/>
+        <geometry><mesh filename="package://hand_motion_rviz/meshes/${'fingertip.stl' if name.endswith('_distal') else 'phalanx.stl'}" scale="${length} ${radius} ${radius * 0.91}"/></geometry>
+        <material name="shell_ivory"/>
       </visual>
       <visual name="${prefix}_${name}_joint">
-        <geometry><sphere radius="${radius * 1.16}"/></geometry>
-        <material name="joint_cyan"/>
+        <origin rpy="1.57079632679 0 0"/>
+        <geometry><cylinder radius="${radius * 0.76}" length="${radius * 1.86}"/></geometry>
+        <material name="joint_graphite"/>
       </visual>
+      <visual name="${prefix}_${name}_hinge_outer">
+        <origin xyz="0 ${radius * 0.99} 0" rpy="1.57079632679 0 0"/>
+        <geometry><cylinder radius="${radius * 0.38}" length="0.0015"/></geometry>
+        <material name="hinge_steel"/>
+      </visual>
+      <visual name="${prefix}_${name}_hinge_inner">
+        <origin xyz="0 ${radius * -0.99} 0" rpy="1.57079632679 0 0"/>
+        <geometry><cylinder radius="${radius * 0.38}" length="0.0015"/></geometry>
+        <material name="hinge_steel"/>
+      </visual>
+      <visual name="${prefix}_${name}_grip">
+        <origin xyz="${length * 0.53} 0 ${radius * -0.82}"/>
+        <geometry><mesh filename="package://hand_motion_rviz/meshes/soft_pad.stl" scale="${length * 0.58} ${radius * 1.48} ${radius * 0.38}"/></geometry>
+        <material name="grip_rubber"/>
+      </visual>
+      <xacro:if value="${name.endswith('_proximal')}">
+        <visual name="${prefix}_${name}_accent">
+          <origin xyz="${length * 0.47} 0 ${radius * 0.91}"/>
+          <geometry><mesh filename="package://hand_motion_rviz/meshes/soft_pad.stl" scale="${length * 0.27} ${radius * 0.63} ${radius * 0.12}"/></geometry>
+          <material name="accent_teal"/>
+        </visual>
+      </xacro:if>
     </link>
   </xacro:macro>
 
@@ -79,19 +101,44 @@
   <xacro:macro name="hand" params="prefix side offset_y">
     <link name="${prefix}_palm">
       <visual name="${prefix}_palm_body">
-        <geometry><box size="0.13 0.10 0.026"/></geometry>
-        <material name="palm_dark"/>
+        <geometry><mesh filename="package://hand_motion_rviz/meshes/palm_${prefix}.stl"/></geometry>
+        <material name="shell_ivory"/>
       </visual>
       <visual name="${prefix}_palm_knuckle_bar">
-        <origin xyz="0.058 0 0"/>
-        <geometry><box size="0.018 0.092 0.032"/></geometry>
-        <material name="joint_cyan"/>
+        <origin xyz="0.054 0 -0.008"/>
+        <geometry><mesh filename="package://hand_motion_rviz/meshes/soft_pad.stl" scale="0.018 0.083 0.013"/></geometry>
+        <material name="joint_graphite"/>
       </visual>
       <!-- Positive finger flexion bends toward -Z, the palmar surface. -->
       <visual name="${prefix}_palm_pad">
-        <origin xyz="-0.008 0 -0.014"/>
-        <geometry><box size="0.086 0.073 0.004"/></geometry>
-        <material name="palm_pad"/>
+        <origin xyz="0.004 ${side * -0.006} -0.014"/>
+        <geometry><mesh filename="package://hand_motion_rviz/meshes/soft_pad.stl" scale="0.069 0.061 0.006"/></geometry>
+        <material name="grip_rubber"/>
+      </visual>
+      <visual name="${prefix}_thenar_pad">
+        <origin xyz="-0.029 ${side * 0.028} -0.014" rpy="0 0 ${side * 0.37}"/>
+        <geometry><mesh filename="package://hand_motion_rviz/meshes/soft_pad.stl" scale="0.047 0.027 0.008"/></geometry>
+        <material name="grip_rubber"/>
+      </visual>
+      <visual name="${prefix}_palm_heel">
+        <origin xyz="-0.049 ${side * -0.012} -0.014"/>
+        <geometry><mesh filename="package://hand_motion_rviz/meshes/soft_pad.stl" scale="0.024 0.044 0.006"/></geometry>
+        <material name="grip_rubber"/>
+      </visual>
+      <visual name="${prefix}_palm_accent">
+        <origin xyz="0.003 ${side * -0.006} -0.0175"/>
+        <geometry><mesh filename="package://hand_motion_rviz/meshes/soft_pad.stl" scale="0.036 0.004 0.0015"/></geometry>
+        <material name="accent_teal"/>
+      </visual>
+      <visual name="${prefix}_back_plate">
+        <origin xyz="-0.005 0 0.013"/>
+        <geometry><mesh filename="package://hand_motion_rviz/meshes/soft_pad.stl" scale="0.087 0.067 0.004"/></geometry>
+        <material name="joint_graphite"/>
+      </visual>
+      <visual name="${prefix}_back_accent">
+        <origin xyz="-0.006 0 0.0155"/>
+        <geometry><mesh filename="package://hand_motion_rviz/meshes/soft_pad.stl" scale="0.054 0.006 0.0015"/></geometry>
+        <material name="accent_teal"/>
       </visual>
     </link>
 
@@ -128,9 +175,19 @@
       <origin xyz="-0.082 0 0" rpy="0 0 0"/>
     </joint>
     <link name="${prefix}_wrist">
-      <visual>
-        <geometry><box size="0.045 0.072 0.032"/></geometry>
-        <material name="wrist_gray"/>
+      <visual name="${prefix}_wrist_cuff">
+        <geometry><mesh filename="package://hand_motion_rviz/meshes/soft_pad.stl" scale="0.045 0.066 0.034"/></geometry>
+        <material name="joint_graphite"/>
+      </visual>
+      <visual name="${prefix}_wrist_trim">
+        <origin xyz="-0.011 0 0"/>
+        <geometry><mesh filename="package://hand_motion_rviz/meshes/soft_pad.stl" scale="0.006 0.068 0.036"/></geometry>
+        <material name="shell_ivory"/>
+      </visual>
+      <visual name="${prefix}_wrist_status">
+        <origin xyz="0.008 0 -0.0175"/>
+        <geometry><mesh filename="package://hand_motion_rviz/meshes/soft_pad.stl" scale="0.009 0.022 0.002"/></geometry>
+        <material name="accent_teal"/>
       </visual>
     </link>
 

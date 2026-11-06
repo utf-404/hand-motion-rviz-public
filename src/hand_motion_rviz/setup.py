@@ -1,3 +1,4 @@
+from glob import glob
 from setuptools import setup
 
 package_name = 'hand_motion_rviz'
@@ -10,6 +11,7 @@ setup(
         ('share/ament_index/resource_index/packages', ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name + '/urdf', ['urdf/hand.urdf.xacro']),
+        ('share/' + package_name + '/meshes', glob('meshes/*.stl')),
         ('share/' + package_name + '/launch', ['launch/hand_rviz.launch.py']),
         ('share/' + package_name + '/config', ['config/hand.rviz']),
         ('share/' + package_name + '/tracker', ['tracker/hand_tracker.py',
