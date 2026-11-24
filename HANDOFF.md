@@ -1,5 +1,7 @@
 # Hand Motion RViz 작업 인계
 
+이 문서의 번호는 원본 개발 기록의 이슈 번호입니다. 새 문의는 [공개 저장소의 Issues](https://github.com/utf-404/hand-motion-rviz-public/issues)에 남겨 주세요.
+
 ## 작업 목표와 완료 조건
 - Ubuntu 한 대에서 카메라 추적·ROS/RViz 실행, 통신 안정성, 손목 회전과 손바닥 초기 시점·좌우 배치를 개선한다.
 - 사용자 요청에 따라 변경 이유·검증·남은 문제를 기록하고 main에 커밋·푸시한다.
@@ -38,8 +40,8 @@
 - 현재 개발환경 xacro와 카메라 .venv 준비됨. .venv/build/install/log는 Git 제외.
 
 ## 관련 이슈
-- [#1 Ubuntu 로컬 실행·통신 안정성](https://github.com/utf-404/hand-motion-rviz/issues/1): 구현·자동 검증 완료, 해결 처리됨.
-- [#2 손목 회전·손바닥 시점·좌우 배치](https://github.com/utf-404/hand-motion-rviz/issues/2): 구현·자동 검증 완료. 실제 카메라/RViz 확인 전까지 열린 상태 유지.
+- `#1 Ubuntu 로컬 실행·통신 안정성`: 구현·자동 검증 완료, 해결 처리됨.
+- `#2 손목 회전·손바닥 시점·좌우 배치`: 구현·자동 검증 완료. 실제 카메라/RViz 확인 전까지 열린 상태 유지.
 
 ## 진행 중인 부분
 - 없음. 코드 커밋 `eae3567` 및 origin/main 푸시 완료. 이슈 상태와 원격 반영 확인.
@@ -109,7 +111,7 @@
 - 구현 차단 없음. 실제 RViz 화면 검증과 오프라인 모델 미리보기를 구분한다.
 
 ### 관련 이슈
-- [#3 로봇 손 외형 개선](https://github.com/utf-404/hand-motion-rviz/issues/3): 구현·자동 검증 완료. 실제 RViz 외형/성능 확인 전까지 열린 상태 유지.
+- `#3 로봇 손 외형 개선`: 구현·자동 검증 완료. 실제 RViz 외형/성능 확인 전까지 열린 상태 유지.
 
 ### 외형 개선 Git 전달 결과
 - 코드 커밋: `1e4542f`

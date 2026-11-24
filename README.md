@@ -272,4 +272,4 @@ HAND_RVIZ_REMOTE=user@ubuntu-host ./scripts/start_remote.sh
 
 Copyright 2026 utf-404
 
-사용 문의와 오류 보고는 [GitHub Issues](https://github.com/utf-404/hand-motion-rviz/issues)에 남겨 주세요.
+사용 문의와 오류 보고는 [GitHub Issues](https://github.com/utf-404/hand-motion-rviz-public/issues)에 남겨 주세요.
