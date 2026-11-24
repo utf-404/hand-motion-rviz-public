@@ -136,3 +136,11 @@
 - 루트 `LICENSE`에 Apache License 2.0 전문을 넣고 README에 코드·문서·자체 생성 모델 자산의 적용 범위를 기록했다. ROS 패키지와 Python 배포본에 같은 전문을 포함시켰다.
 - Python 검사 51개 통과, ROS 통합 검사 2개 건너뜀. 모의 SSH로 대상 필수 입력, 기본·재정의 경로, 공백·인용부호, 포트 전달을 확인했다. Linux `colcon` 빌드와 소스 배포본 및 휠의 라이선스 포함을 확인했다.
 - 별도 로컬 사본에서 과거 10개 커밋의 연락처와 개인 환경값을 정리했다. 원격 Git 이력과 GitHub의 PR 참조는 비공개 원본에 남아 있다.
+
+## README와 상세 문서 정리
+
+- `README.md`를 306줄에서 45줄로 줄였다. 프로젝트 설명, RViz2와 Isaac Sim 빠른 실행, 버전, 라이선스를 남겼다.
+- [설치와 실행](docs/setup-and-run.md)에 설치·수동 실행·SSH를, [모델과 통신](docs/model-and-protocol.md)에 관절·JSON Lines·모델 이미지·테스트를 정리했다. 복구와 진단은 [문제 해결](docs/troubleshooting.md)에 모았다.
+- [흐름도](docs/workflow.svg)를 README에 넣었다. 740px와 390px에서 렌더링을 확인했다. 상대 링크와 앵커 21개, Bash 예제 25개, `git diff --check` 통과.
+- Python 검사 51개 통과, 시스템 ROS 통합 검사 2개 건너뜀. `./scripts/start_isaacsim.sh --demo --headless-seconds 8`로 216프레임과 36관절을 확인했다.
+- 문서 작성과 검증 완료. 게시 대상은 공개 저장소의 `main`이다.
