@@ -3,10 +3,15 @@ set -eo pipefail
 
 script_dir="$(cd "$(dirname "$0")" && pwd)"
 repo_root="$(cd "$script_dir/.." && pwd)"
-remote="${HAND_RVIZ_REMOTE:-user@ubuntu-host}"
-remote_workspace="${HAND_RVIZ_REMOTE_WORKSPACE:-/path/to/hand-motion-rviz}"
+remote="${HAND_RVIZ_REMOTE:-}"
+remote_workspace="${HAND_RVIZ_REMOTE_WORKSPACE:-ws/hand-motion-rviz}"
 port="${HAND_RVIZ_PORT:-18765}"
 camera="${HAND_RVIZ_CAMERA:-0}"
+
+if [[ -z "$remote" ]]; then
+  echo "Set HAND_RVIZ_REMOTE to an SSH destination, for example user@ubuntu-host." >&2
+  exit 1
+fi
 
 if [[ ! "$port" =~ ^[0-9]+$ ]] || ((port < 1 || port > 65535)); then
   echo "Invalid TCP port: $port" >&2
@@ -37,11 +42,16 @@ if lsof -nP -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then
   exit 1
 fi
 
-remote_command="cd '$remote_workspace' && HAND_RVIZ_PORT='$port' ./scripts/start_ubuntu.sh"
-echo "Starting Ubuntu ROS/RViz through $remote ..."
+# Quote the path for the remote login shell.
+remote_directory="'${remote_workspace//\'/\'\\\'\'}'"
+if [[ "$remote_workspace" != /* ]]; then
+  remote_directory='"$HOME"/'"$remote_directory"
+fi
+remote_command="cd $remote_directory && HAND_RVIZ_PORT='$port' ./scripts/start_ubuntu.sh"
+echo "Starting Ubuntu ROS/RViz over SSH ..."
 ssh -tt -o ExitOnForwardFailure=yes \
   -L "$port:127.0.0.1:$port" \
-  "$remote" "$remote_command" </dev/null &
+  -- "$remote" "$remote_command" </dev/null &
 ssh_pid=$!
 
 cleanup() {
@@ -60,7 +70,7 @@ for _ in {1..100}; do
     echo "The remote ROS/RViz process stopped before the bridge became ready." >&2
     exit 1
   fi
-  if ssh -o BatchMode=yes -o ConnectTimeout=2 "$remote" \
+  if ssh -o BatchMode=yes -o ConnectTimeout=2 -- "$remote" \
     "ss -ltn | grep -q ':$port '"; then
     bridge_ready=true
     break

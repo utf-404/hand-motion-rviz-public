@@ -289,4 +289,18 @@ ROS 통합 검사는 가짜 TCP 프레임으로 36관절과 손목 회전 출력
 
 트래커의 `--backend auto`는 macOS에서 AVFoundation을 선택합니다. 이전 `mac/hand_tracker.py` 경로는 호환 진입점으로 유지합니다. 원격 브리지에 연결하려면 `--host`와 `--port`를 지정하세요. 신뢰할 수 있는 LAN 또는 SSH 터널에서 사용하고, SSH 터널을 사용하는 경우 트래커의 호스트는 터널의 로컬 주소로 지정합니다. Ubuntu 한 대에서 실행할 때는 이 설정이 필요하지 않습니다.
 
-기존 SSH 자동 실행 흐름은 `scripts/start_remote.sh`로 분리했습니다. 사용할 때는 `HAND_RVIZ_REMOTE=user@ubuntu-host`와 `HAND_RVIZ_REMOTE_WORKSPACE=/path/to/hand-motion-rviz`를 실제 원격 환경에 맞게 지정하세요.
+카메라가 연결된 Mac에서 SSH로 Ubuntu의 ROS 시각화를 시작하려면 `HAND_RVIZ_REMOTE`에 SSH 사용자와 호스트를 지정합니다. SSH 설정에 등록한 호스트 별칭도 쓸 수 있습니다.
+
+```bash
+HAND_RVIZ_REMOTE=user@ubuntu-host ./scripts/start_remote.sh
+```
+
+저장소의 기본 위치는 원격 사용자 홈 아래 `ws/hand-motion-rviz`입니다. 다른 위치에 클론했다면 `HAND_RVIZ_REMOTE_WORKSPACE`에 절대 경로나 원격 사용자 홈 기준 상대 경로를 지정합니다.
+
+## 라이선스 및 문의
+
+이 저장소에서 작성한 코드와 문서, 생성한 로봇 손 STL 및 모델 미리보기에는 [Apache License 2.0](LICENSE)이 적용됩니다. 외부 의존성에는 각 프로젝트의 라이선스가 적용됩니다.
+
+Copyright 2026 utf-404
+
+사용 문의와 오류 보고는 [GitHub Issues](https://github.com/utf-404/hand-motion-rviz/issues)에 남겨 주세요.
