@@ -6,7 +6,7 @@
 - 실제 카메라/RViz 확인 완료 전에는 전체 장비 검증 완료로 처리하지 않는다.
 
 ## 완료한 작업과 변경 파일
-- 기준 커밋 `cd936ee`에서 작업 시작. 코드 변경 커밋 `eae3567`을 origin/main에 푸시 완료.
+- 기준 커밋 `cd936ee`에서 작업을 시작했고, 코드 변경 커밋 `eae3567`을 `origin/main`에 푸시했다.
 - `tracker/`: 공통 카메라 추적, Linux V4L2/localhost 기본값, 카메라 번호·장치 경로, 제한시간·재접속·최신 프레임 전송, 손목 RPY 계산.
 - `mac/`: 기존 경로를 공통 트래커로 위임하는 호환 진입점.
 - `tracker_stream.py`, `hand_bridge.py`: 16KiB JSONL 검증, monotonic watchdog, 무응답 연결 해제, 원자적 양손 자세, 종료 정리, 36관절 발행.
@@ -112,7 +112,7 @@
 - [#3 로봇 손 외형 개선](https://github.com/utf-404/hand-motion-rviz/issues/3): 구현·자동 검증 완료. 실제 RViz 외형/성능 확인 전까지 열린 상태 유지.
 
 ### 외형 개선 Git 전달 결과
-- 코드 커밋: `1e4542f`
+- 코드 커밋 `1e4542f`.
 - 푸시 대상: origin/main, 성공.
 - #3에 커밋·검증 결과 기록. 실제 RViz 수동 확인 전까지 열린 상태 유지.
 - 이 전달 기록은 별도 문서 커밋으로 보존.
@@ -122,7 +122,15 @@
 - GitHub `Ver1.0`과 `Ver2.0`을 `main`의 `8e969aa079977dfaa129666e39df386658a44b9f`에서 생성했다. `Ver1.0`은 기존 RViz2 버전이다. `Ver2.0`을 로컬에서 체크아웃해 Isaac Sim 코드를 작성했다. 세 원격 브랜치의 SHA와 기본 브랜치 `main`을 확인했다. [Ver1.0](https://github.com/utf-404/hand-motion-rviz/tree/Ver1.0) · [Ver2.0](https://github.com/utf-404/hand-motion-rviz/tree/Ver2.0)
 - `isaac_hand/model.py`에서 기존 Xacro의 메시와 관절을 재사용한다. Isaac Sim용으로 질량·관성을 채우고 고정 조인트를 병합해 양손이 하나의 36관절 PhysX articulation에 연결되도록 했다. 힘과 접촉 대신 화면에서의 모션 재현을 목표로 해 충돌체 없이 위치 제어값을 설정했다.
 - `isaac_hand/run.py`는 `/joint_states`를 구독해 이름으로 각도를 연결하고, `scripts/start_isaacsim.sh`는 라이브 구독과 카메라 없는 데모를 실행한다. 데모는 기본 토픽과 노드 이름을 분리했다. `README.md`에 실행법을 추가했다.
-- Isaac Sim 6.2.0 RC14에서 데모와 ROS 2 Humble 라이브 경로를 실행했다. 최종 코드의 headless 13초 검증에서 `/joint_states` 379프레임, 36관절 수신 확인. 합성 TCP 입력으로 좌우 검지와 손목 yaw가 움직였고, 연결 종료 후 36관절이 중립으로 복귀했다. 임시 재실행은 `bash /path/to/local-verification/verify.sh`다.
-- Isaac Sim GUI에서 양손 외형과 좌우 배치, 데모의 손가락과 손목 변화, 실행기 종료를 확인했다. 증거 이미지는 `/path/to/local-verification/isaac-hands-1.png`, `isaac-hands-2.png`다. Python 검사 53개 중 51개 통과, 시스템 ROS 통합 검사 2개 건너뜀. Bash 구문과 `git diff --check` 통과.
+- Isaac Sim 6.2.0 RC14에서 데모와 ROS 2 Humble 라이브 경로를 실행했다. 최종 코드의 headless 13초 검증에서 `/joint_states` 379프레임, 36관절 수신 확인. 합성 TCP 입력으로 좌우 검지와 손목 yaw가 움직였고, 연결 종료 후 36관절이 중립으로 복귀했다.
+- Isaac Sim GUI에서 양손 외형과 좌우 배치, 데모의 손가락과 손목 변화, 실행기 종료를 확인했다. Python 검사 53개 중 51개 통과, 시스템 ROS 통합 검사 2개 건너뜀. Bash 구문과 `git diff --check` 통과.
 - 푸시 전 `./scripts/start_isaacsim.sh --demo --headless-seconds 8` 재실행. 102프레임에서 36관절을 수신했고 좌우 검지와 손목이 움직였다. Python 검사 51개 통과, 시스템 ROS 통합 검사 2개 건너뜀.
 - 실행은 `./scripts/start_isaacsim.sh --demo`, 발행 중인 `/joint_states` 연결은 `./scripts/start_isaacsim.sh`다. 실제 웹캠으로 RViz2와 Isaac Sim을 함께 띄우는 검증은 [#4](https://github.com/utf-404/hand-motion-rviz/issues/4)에서 추적한다.
+
+## 공개용 연락처와 라이선스 정리
+
+- ROS 매니페스트의 필수 주소는 GitHub `noreply`로 바꾸고, Python 패키지의 별도 이메일 필드를 제거했다. 문의와 오류 보고는 GitHub Issues를 사용한다.
+- `scripts/start_remote.sh`에서 개인 원격 접속 기본값을 제거했다. `HAND_RVIZ_REMOTE`로 대상을 지정하고, 경로는 원격 사용자 홈의 `ws/hand-motion-rviz`를 기본으로 한다.
+- 루트 `LICENSE`에 Apache License 2.0 전문을 넣고 README에 코드·문서·자체 생성 모델 자산의 적용 범위를 기록했다. ROS 패키지와 Python 배포본에 같은 전문을 포함시켰다.
+- Python 검사 51개 통과, ROS 통합 검사 2개 건너뜀. 모의 SSH로 대상 필수 입력, 기본·재정의 경로, 공백·인용부호, 포트 전달을 확인했다. Linux `colcon` 빌드와 소스 배포본 및 휠의 라이선스 포함을 확인했다.
+- 별도 로컬 사본에서 과거 10개 커밋의 연락처와 개인 환경값을 정리했다. 원격 Git 이력과 GitHub의 PR 참조는 공개 전 별도 처리가 필요하다.

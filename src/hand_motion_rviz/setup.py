@@ -9,7 +9,7 @@ setup(
     packages=[package_name],
     data_files=[
         ('share/ament_index/resource_index/packages', ['resource/' + package_name]),
-        ('share/' + package_name, ['package.xml']),
+        ('share/' + package_name, ['package.xml', 'LICENSE']),
         ('share/' + package_name + '/urdf', ['urdf/hand.urdf.xacro']),
         ('share/' + package_name + '/meshes', glob('meshes/*.stl')),
         ('share/' + package_name + '/launch', ['launch/hand_rviz.launch.py']),
@@ -22,9 +22,10 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='user',
-    maintainer_email='138092660+utf-404@users.noreply.github.com',
+    maintainer='utf-404',
     description='Mirror two webcam-tracked hands in RViz.',
     license='Apache-2.0',
+    url='https://github.com/utf-404/hand-motion-rviz',
+    project_urls={'Issues': 'https://github.com/utf-404/hand-motion-rviz/issues'},
     entry_points={'console_scripts': ['hand_bridge = hand_motion_rviz.hand_bridge:main']},
 )
