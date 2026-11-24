@@ -25,7 +25,7 @@ setup(
     maintainer='utf-404',
     description='Mirror two webcam-tracked hands in RViz.',
     license='Apache-2.0',
-    url='https://github.com/utf-404/hand-motion-rviz',
-    project_urls={'Issues': 'https://github.com/utf-404/hand-motion-rviz/issues'},
+    url='https://github.com/utf-404/hand-motion-rviz-public',
+    project_urls={'Issues': 'https://github.com/utf-404/hand-motion-rviz-public/issues'},
     entry_points={'console_scripts': ['hand_bridge = hand_motion_rviz.hand_bridge:main']},
 )
