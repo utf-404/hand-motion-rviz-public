@@ -8,6 +8,37 @@ Ubuntu webcam → MediaPipe → local TCP → hand_bridge → /joint_states → 
 
 기본 환경은 Ubuntu 22.04, ROS 2 Humble, Python 3.10입니다. Ubuntu 데스크톱에서 카메라 미리보기와 RViz를 함께 실행합니다.
 
+## Ver2.0 Isaac Sim에서 양손 보기
+
+Isaac Sim 6.2와 `xacro`가 필요합니다. 기본 설치 경로는 `~/isaacsim/python.sh`입니다. 다른 곳에 설치했으면 `HAND_ISAAC_PYTHON`에 `python.sh` 경로를 지정합니다. 실행기는 PATH와 저장소의 `.venv/bin/xacro`에서 `xacro`를 찾습니다.
+
+ROS 설치의 `xacro`를 쓸 수 없는 환경에서는 아래처럼 Python 가상환경에 설치할 수 있습니다.
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install xacro
+```
+
+웹캠 없이 Isaac Sim 화면에서 두 손을 움직여 봅니다. 창을 닫거나 터미널에서 `Ctrl+C`를 누르면 데모 발행도 종료됩니다.
+
+```bash
+./scripts/start_isaacsim.sh --demo
+```
+
+실시간 입력은 한 터미널에서 기존 `./scripts/start_all.sh`를 실행하고, 다른 터미널에서 아래 명령을 실행합니다. 두 뷰어가 같은 `/joint_states`를 받아 양손 손가락의 굽힘과 손목 3축 회전을 표시합니다. ROS 도메인이나 RMW를 바꿨다면 두 터미널에서 같은 값을 사용합니다.
+
+```bash
+./scripts/start_isaacsim.sh
+```
+
+화면 없이 ROS 수신과 관절 운동을 확인할 수 있습니다. 이 명령은 처음 받은 포즈의 관절 수와 실제 관절 각도의 변화 범위를 출력합니다. 데모는 기본적으로 `/hand_motion_demo/joint_states`에 발행합니다. 별도 토픽을 쓰려면 `--topic`을 지정합니다.
+
+```bash
+./scripts/start_isaacsim.sh --demo --headless-seconds 8
+```
+
+Isaac Sim 장면은 기존 손 Xacro와 STL로 생성합니다. 손목의 위치는 고정하고, 각 관절의 각도를 `/joint_states`에 맞춰 움직입니다.
+
 ## 최초 설치
 
 ROS 2 Humble이 설치된 Ubuntu에서 실행합니다. `sudo` 설치는 사용자 터미널에서 인증이 필요할 수 있습니다.
