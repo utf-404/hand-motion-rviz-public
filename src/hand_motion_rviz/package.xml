@@ -3,8 +3,10 @@
   <name>hand_motion_rviz</name>
   <version>0.1.0</version>
   <description>Mirror two webcam-tracked hands in RViz.</description>
-  <maintainer email="138092660+utf-404@users.noreply.github.com">user</maintainer>
-  <license>Apache-2.0</license>
+  <maintainer email="138092660+utf-404@users.noreply.github.com">utf-404</maintainer>
+  <license file="LICENSE">Apache-2.0</license>
+  <url type="website">https://github.com/utf-404/hand-motion-rviz</url>
+  <url type="bugtracker">https://github.com/utf-404/hand-motion-rviz/issues</url>
   <buildtool_depend>ament_python</buildtool_depend>
   <exec_depend>rclpy</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
